@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SIMPANG - Sistem Informasi Pelaporan Anti Perundungan</title>
+  <title>SIMPANG - MAN Kota Lhokseumawe</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome Icons -->
@@ -493,6 +493,39 @@
       })[char]);
     }
 
+    function formatTanggal(value, includeTime = false) {
+      if (!value) return '-';
+
+      const dateOnly = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      let date;
+      let options;
+
+      if (dateOnly) {
+        // Treat date-only values as calendar dates, not UTC timestamps.
+        date = new Date(Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12));
+        options = { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' };
+      } else {
+        date = new Date(value);
+        options = {
+          day: 'numeric', month: 'long', year: 'numeric',
+          timeZone: 'Asia/Jakarta'
+        };
+        if (includeTime) options.hour = '2-digit', options.minute = '2-digit';
+      }
+
+      if (Number.isNaN(date.getTime())) return String(value);
+      return new Intl.DateTimeFormat('id-ID', options).format(date);
+    }
+
+    function formatJam(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return new Intl.DateTimeFormat('id-ID', {
+        hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
+      }).format(date) + ' WIB';
+    }
+
     async function lacakTiket() {
       const tiket = document.getElementById('inputTiket').value.trim();
       const output = document.getElementById('hasilLacak');
@@ -518,9 +551,10 @@
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600">
                 <p><strong>Kategori:</strong> ${escapeHtml(result.data.kategori)}</p>
-                <p><strong>Waktu Lapor:</strong> ${escapeHtml(result.data.created_at)}</p>
+                <p><strong>Tgl Lapor:</strong> ${escapeHtml(formatTanggal(result.data.created_at))}</p>
+                <p><strong>Jam Lapor:</strong> ${escapeHtml(formatJam(result.data.created_at))}</p>
                 <p><strong>Pelapor:</strong> ${escapeHtml(result.data.nama)} (${escapeHtml(result.data.peran)})</p>
-                <p><strong>Tgl Kejadian:</strong> ${escapeHtml(result.data.tanggal_kejadian)}</p>
+                <p><strong>Tgl Kejadian:</strong> ${escapeHtml(formatTanggal(result.data.tanggal_kejadian))}</p>
               </div>
               <div class="pt-2 border-t border-slate-200">
                 <p class="font-semibold text-slate-700">Rincian Laporan:</p>
